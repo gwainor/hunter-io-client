@@ -17,15 +17,16 @@ class ApiError(Exception):
         self.error_data = error_data
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(slots=True)
 class Client:
     # Timeout in seconds
     timeout: float = 10.0
+    test_mode: bool = False
+    _client: httpx.Client | None = None
 
     def get(self, path: str, query_params: dict[str, Any] | None = None) -> httpx.Response:
-        with self._client() as client:
-            query_parameters = httpx.QueryParams(**query_params) if query_params else None
-            response = client.get(path, params=query_parameters)
+        query_parameters = httpx.QueryParams(**query_params) if query_params else None
+        response = self.request.get(path, params=query_parameters)
 
         if response.is_error:
             error_response = ErrorResponse.from_response(response)
@@ -37,9 +38,15 @@ class Client:
 
         return response
 
-    def _client(self) -> httpx.Client:
-        return httpx.Client(
-            base_url=settings.service_url,
-            timeout=self.timeout,
-            headers={"X-API-KEY": settings.api_key}
-        )
+    @property
+    def request(self) -> httpx.Client:
+        if self._client is None:
+            api_key = "test-api-key" if self.test_mode else settings.api_key
+
+            self._client = httpx.Client(
+                base_url=settings.service_url,
+                timeout=self.timeout,
+                headers={"X-API-KEY": api_key},
+            )
+
+        return self._client
