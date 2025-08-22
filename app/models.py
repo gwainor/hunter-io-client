@@ -1,3 +1,4 @@
+"""Models."""
 from typing import Type, TypeVar
 
 import httpx
@@ -8,26 +9,41 @@ TModel = TypeVar('TModel', bound='BaseModel')
 
 
 class BaseModel(PydanticBaseModel):
+    """Base Model for all."""
+
     @classmethod
     def from_response(cls: Type[TModel], response: httpx.Response) -> TModel:
+        """From response, create model instance."""
         json = response.json()
         if response.is_error:
             return cls(**json)
-        else:
-            return cls(**json["data"])
+
+        return cls(**json['data'])
 
 
 class ErrorResponseItem(BaseModel):
+    """Error response item.
+
+    The structure is taken from hunter.io error responses.
+    """
+
     id: str
     code: int
     details: str
 
 
 class ErrorResponse(BaseModel):
+    """Error response model."""
+
     errors: list[ErrorResponseItem]
 
 
 class HunterIoSource(BaseModel):
+    """Hunter IO Source model.
+
+    This source is being repeated in the responses
+    """
+
     domain: str
     uri: str
     extracted_on: str
@@ -36,6 +52,8 @@ class HunterIoSource(BaseModel):
 
 
 class EmailVerifierResponse(BaseModel):
+    """Email Verifier response model."""
+
     status: str
     score: int
     email: EmailStr
@@ -52,6 +70,8 @@ class EmailVerifierResponse(BaseModel):
 
 
 class EmailFinderResponse(BaseModel):
+    """Email Finder response model."""
+
     first_name: str
     last_name: str
     email: EmailStr

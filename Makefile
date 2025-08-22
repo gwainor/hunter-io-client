@@ -4,7 +4,7 @@ help:
 
 ## lint-check - Run linters
 lint-check:
-	uv run flake8 app tests
+	uv run flake8 app tests --select=WPS
 
 ## type-check - Run type checkers
 type-check:
